@@ -1,0 +1,18 @@
+{
+    "Comment": "DNS Validation CNAME record",
+    "Changes": [
+      {
+        "Action": "DELETE",
+        "ResourceRecordSet": {
+          "Name": "{{SSL_CERT_NAME}}",
+          "Type": "CNAME",
+          "TTL": 300,
+          "ResourceRecords": [
+            {
+              "Value": "{{SSL_CERT_VALUE}}"
+            }
+          ]
+        }
+      }
+    ]
+  }

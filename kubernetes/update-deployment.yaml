@@ -1,0 +1,35 @@
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  labels: 
+    app: update
+  name: update-delete-add-deploy
+spec: 
+  replicas: 1
+  selector: 
+    matchLabels: 
+      app: update
+  template: 
+    metadata: 
+      labels: 
+        app: update
+    spec: 
+      containers: 
+        - 
+          env: 
+            - 
+              name: MYSQL_PASSWORD
+              valueFrom: 
+                secretKeyRef: 
+                  key: admin-password
+                  name: mysql-secrets
+          envFrom: 
+            - 
+              configMapRef: 
+                name: servers-configmap
+          image: {{REGISTRY}}
+          name: update
+          ports: 
+            - 
+              containerPort: 80
