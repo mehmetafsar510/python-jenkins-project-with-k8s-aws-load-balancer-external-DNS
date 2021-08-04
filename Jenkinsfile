@@ -394,6 +394,37 @@ pipeline{
                         fi
                     '''
                     sleep(10)
+                    sh '''
+                        extpolicy=$(aws iam list-policies | grep -i AllowExternalDNSUpdates)  || true
+                        if [ "$extpolicy" == '' ]
+                        then
+                            aws iam create-policy \
+                                --policy-name AllowExternalDNSUpdates \
+                                --policy-document file://extpolicy.json
+                        else
+                            echo "AllowExternalDNSUpdates has already created..."
+
+                        fi
+                    '''
+                    sh '''
+                        serviceaccountdns=$(eksctl get iamserviceaccount --cluster ${CLUSTER_NAME} | grep -i external-dns)  || true
+                        if [ "$serviceaccountdns" == '' ]
+                        then
+                            eksctl create iamserviceaccount \
+                              --cluster=${CLUSTER_NAME} \
+                              --namespace=kube-system \
+                              --name=external-dns \
+                              --attach-policy-arn=arn:aws:iam::${AWS_ACCOUNT_ID}:policy/AllowExternalDNSUpdates \
+                              --override-existing-serviceaccounts \
+                              --approve
+                        else
+                            echo "external-dns has already created..."
+
+                        fi
+                    '''
+                    sh "get role arn with cli!!!!!!"
+                    sh "sed -i 's|{{role-arn}}|$????????|g' externalDNS.yml"
+                    sh "kubectl apply  -f  externalDNS.yml"
 
                 }                  
             }
@@ -423,22 +454,6 @@ pipeline{
             }
         }
 
-        stage('dns-record'){
-            agent any
-            steps{
-                withAWS(credentials: 'mycredentials', region: 'us-east-1') {
-                    script {
-                        env.ELB_DNS = sh(script:'aws elbv2 describe-load-balancers --query LoadBalancers[].DNSName --output text | sed "s/\\s*None\\s*//g"', returnStdout:true).trim()
-                        env.ZONE_ID = sh(script:"aws route53 list-hosted-zones-by-name --dns-name $DOMAIN_NAME --query HostedZones[].Id --output text | cut -d/ -f3", returnStdout:true).trim()   
-                    }
-                    sh "sed -i 's|{{DNS}}|dualstack.$ELB_DNS|g' dnsrecord.json"
-                    sh "sed -i 's|{{FQDN}}|$FQDN|g' dnsrecord.json"
-                    sh "aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID --change-batch file://dnsrecord.json"
-                    
-                }                  
-            }
-        }
-
         stage('Aws-Certificate-Manager'){
             agent any
             steps{
@@ -462,6 +477,7 @@ pipeline{
             steps{
                 withAWS(credentials: 'mycredentials', region: 'us-east-1') {
                     script {
+                        env.ZONE_ID = sh(script:"aws route53 list-hosted-zones-by-name --dns-name $DOMAIN_NAME --query HostedZones[].Id --output text | cut -d/ -f3", returnStdout:true).trim() 
                         env.SSL_CERT_ARN = sh(script:"aws acm list-certificates --query CertificateSummaryList[].[CertificateArn,DomainName]   --output text | grep $FQDN | cut -f1", returnStdout:true).trim()
                         env.SSL_CERT_NAME = sh(script:"aws acm describe-certificate --certificate-arn $SSL_CERT_ARN --query Certificate.DomainValidationOptions --output text | tail -n 1 | cut -f2", returnStdout:true).trim()
                         env.SSL_CERT_VALUE = sh(script:"aws acm describe-certificate --certificate-arn $SSL_CERT_ARN --query Certificate.DomainValidationOptions --output text | tail -n 1 | cut -f4", returnStdout:true).trim()   
