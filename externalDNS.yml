@@ -52,8 +52,8 @@ spec:
         app: external-dns
       # If you're using kiam or kube2iam, specify the following annotation.
       # Otherwise, you may safely omit it.  #Change-2: Commented line 55 and 56
-      #annotations:  
-        #iam.amazonaws.com/role: arn:aws:iam::ACCOUNT-ID:role/IAM-SERVICE-ROLE-NAME    
+      annotations:  
+        iam.amazonaws.com/role: {{role-arn}}    
     spec:
       serviceAccountName: external-dns
       containers:
@@ -63,8 +63,10 @@ spec:
         - --source=service
         - --source=ingress
         # Change-3: Commented line 65 and 67 - --domain-filter=external-dns-test.my-org.com # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
+        - --domain-filter={{DOMAIN_NAME}}
         - --provider=aws
        # Change-3: Commented line 65 and 67  - --policy=upsert-only # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
+        - --policy=upsert-only
         - --aws-zone-type=public # only look at public hosted zones (valid values are public, private or no value for both)
         - --registry=txt
         - --txt-owner-id=my-hostedzone-identifier

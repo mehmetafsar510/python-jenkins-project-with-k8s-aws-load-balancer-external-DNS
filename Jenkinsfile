@@ -437,6 +437,7 @@ pipeline{
                           echo "Successfully created  aws-load-balancer-controller role."
                           sh "kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml"
                           sh "sed -i 's|{{role-arn}}|$ARN|g' externalDNS.yml"
+                          sh "sed -i 's|{{DOMAIN_NAME}}|$DOMAIN_NAME|g' externalDNS.yml"
                           sh "kubectl apply  -f  externalDNS.yml"
                           sleep(15)
                           break
