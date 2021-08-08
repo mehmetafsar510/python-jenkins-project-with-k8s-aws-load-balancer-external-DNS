@@ -12,9 +12,9 @@ pipeline{
         APP_REPO_NAME = "mehmetafsar510"
         AWS_REGION = "us-east-1"
         CLUSTER_NAME = "mehmet-cluster"
-        FQDN = "clarusshop.mehmetafsar.com"
+        FQDN = "clarus.mehmetafsar.com"
         DOMAIN_NAME = "mehmetafsar.com"
-        NM_SP = "phonebook"
+        NM_SP = "esma"
         GIT_FOLDER = sh(script:'echo ${GIT_URL} | sed "s/.*\\///;s/.git$//"', returnStdout:true).trim()
     }
     stages{
