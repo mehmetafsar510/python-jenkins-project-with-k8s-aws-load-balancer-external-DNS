@@ -408,7 +408,7 @@ pipeline{
                         then
                             eksctl create iamserviceaccount \
                               --cluster=${CLUSTER_NAME} \
-                              --namespace=kube-system \
+                              --namespace default\
                               --name=external-dns \
                               --attach-policy-arn=arn:aws:iam::${AWS_ACCOUNT_ID}:policy/AllowExternalDNSUpdates \
                               --override-existing-serviceaccounts \
@@ -427,7 +427,7 @@ pipeline{
                 withAWS(credentials: 'mycredentials', region: 'us-east-1') {
                     script {
                         
-                        env.ARN = sh(script:"aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-kube-system-external-dns | grep -i OutputValue | cut -d':' -f2-", returnStdout:true).trim()
+                        env.ARN = sh(script:"aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-default-external-dns | grep -i OutputValue | cut -d':' -f2-", returnStdout:true).trim()
                     }
                     echo "Testing if the aws-load-balancer-controller role is ready or not"
                 script {
