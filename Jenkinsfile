@@ -382,18 +382,14 @@ pipeline{
                       --set serviceAccount.name=aws-load-balancer-controller \
                       -n kube-system
                     """
-
-                    sleep(10)
-                    sh '''
-                        KubeApply=$(kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml | grep -i 'vingress.elbv2.k8s.aws') || true
-                        if [ "$KubeApply" == 'vingress.elbv2.k8s.aws' ]
-                        then
-                            kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml
-                        else
-                            kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml
-                        fi
-                    '''
-                    sleep(10)
+                    sh "helm uninstall aws-load-balancer-controller -n kube-system"
+                    sh """
+                    helm upgrade -i aws-load-balancer-controller eks/aws-load-balancer-controller \
+                      --set clusterName=${CLUSTER_NAME} \
+                      --set serviceAccount.create=false \
+                      --set serviceAccount.name=aws-load-balancer-controller \
+                      -n kube-system
+                    """
                     sh '''
                         extpolicy=$(aws iam list-policies | grep -i AllowExternalDNSUpdates)  || true
                         if [ "$extpolicy" == '' ]
@@ -422,13 +418,38 @@ pipeline{
 
                         fi
                     '''
-                    sh "get role arn with cli!!!!!!"
-                    sh "sed -i 's|{{role-arn}}|$????????|g' externalDNS.yml"
-                    sh "kubectl apply  -f  externalDNS.yml"
-
                 }                  
             }
         }
+
+        stage('Test the aws-load-balancer-controller and external role') {
+            steps {
+                withAWS(credentials: 'mycredentials', region: 'us-east-1') {
+                    script {
+                        
+                        env.ARN = sh(script:"aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-kube-system-external-dns | grep -i OutputValue | cut -d':' -f2-", returnStdout:true).trim()
+                    }
+                    echo "Testing if the aws-load-balancer-controller role is ready or not"
+                script {
+                    while(true) {
+                        try {
+                          sh "aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-kube-system-aws-load-balancer-controller --output text | grep -i CREATE_COMPLETE | tail -n 1 | cut -f8"
+                          echo "Successfully created  aws-load-balancer-controller role."
+                          sh "kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml"
+                          sh "sed -i 's|{{role-arn}}|$ARN|g' externalDNS.yml"
+                          sh "kubectl apply  -f  externalDNS.yml"
+                          sleep(15)
+                          break
+                        }
+                        catch(Exception) {
+                          echo 'Could not get aws-load-balancer-controller role please wait'
+                          sleep(5)  
+                        } 
+                    }
+                }
+            }
+        }
+    }
 
         stage('dns-record-control'){
             agent any
@@ -512,13 +533,21 @@ pipeline{
             steps{
                 withAWS(credentials: 'mycredentials', region: 'us-east-1') {
 
-                    sh "kubectl apply --namespace $NM_SP -f prometheus"
-                    sh "helm repo add grafana https://grafana.github.io/helm-charts"
-                    sh "helm repo update"
-                    sh """
-                      helm install my-release grafana/grafana \
-                      --namespace $NM_SP 
-                    """      
+                    sh '''
+                        NameSpaces=$(kubectl get namespaces | grep -i prometheus) || true
+                        if [ "$NameSpaces" == '' ]
+                        then
+                            kubectl create namespace prometheus
+                        else
+                            kubectl delete namespace prometheus
+                            kubectl create namespace prometheus
+
+                            fi
+                    '''
+                    sh "kubectl apply --namespace prometheus -f prometheus"
+                    sh "kubectl apply -f store.yml"
+                    sh "kubectl apply --namespace prometheus -f grafana"
+                    sh "kubectl get svc --namespace prometheus"       
                 }                  
             }
         }

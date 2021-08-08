@@ -147,7 +147,7 @@ def delete_record():
     else:
         return render_template('delete.html', show_result=False, not_valid=False, developer_name='Mehmet')
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/choose', methods=['GET', 'POST'])
 def find_records():
     return render_template('index.html', show_result=False, developer_name='Mehmet')
 

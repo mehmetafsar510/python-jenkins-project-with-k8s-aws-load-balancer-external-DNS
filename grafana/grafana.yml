@@ -2,13 +2,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: grafana-pvc
+  name: clar-pv-claim
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
+  storageClassName: aws
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -65,7 +66,7 @@ spec:
       volumes:
         - name: grafana-pv
           persistentVolumeClaim:
-            claimName: grafana-pvc
+            claimName: clar-pv-claim
 ---
 apiVersion: v1
 kind: Service
@@ -76,7 +77,6 @@ spec:
     - port: 3000
       protocol: TCP
       targetPort: http-grafana
-      nodePort: 33000
   selector:
     app: grafana
   sessionAffinity: None

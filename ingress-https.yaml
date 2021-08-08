@@ -29,11 +29,11 @@ spec:
             backend:
                 serviceName: ssl-redirect
                 servicePort: use-annotation         
-          - path: /result/*
+          - path: /choose
             backend:
                 serviceName: update
                 servicePort: 80
-          - path: /*
+          - path: /
             backend:
                 serviceName: search-flask
                 servicePort: 80
