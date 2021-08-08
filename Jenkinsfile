@@ -427,7 +427,7 @@ pipeline{
                 withAWS(credentials: 'mycredentials', region: 'us-east-1') {
                     script {
                         
-                        env.ARN = sh(script:"aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-default-external-dns | grep -i OutputValue | cut -d':' -f2-", returnStdout:true).trim()
+                        env.ARN = sh(script:"aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-default-external-dns | grep -i OutputValue | cut -d'\"' -f 4", returnStdout:true).trim()
                     }
                     echo "Testing if the aws-load-balancer-controller role is ready or not"
                 script {
