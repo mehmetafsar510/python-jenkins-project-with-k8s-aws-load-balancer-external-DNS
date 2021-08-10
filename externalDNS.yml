@@ -58,15 +58,15 @@ spec:
       serviceAccountName: external-dns
       containers:
       - name: external-dns
-        image: k8s.gcr.io/external-dns/external-dns:v0.7.6
+        image: registry.opensource.zalan.do/teapot/external-dns:latest
         args:
         - --source=service
         - --source=ingress
         # Change-3: Commented line 65 and 67 - --domain-filter=external-dns-test.my-org.com # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
-        - --domain-filter={{DOMAIN_NAME}}
+        #- --domain-filter={{DOMAIN_NAME}}
         - --provider=aws
        # Change-3: Commented line 65 and 67  - --policy=upsert-only # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
-        - --policy=sync
+        #- --policy=sync
         - --aws-zone-type=public # only look at public hosted zones (valid values are public, private or no value for both)
         - --registry=txt
         - --txt-owner-id=my-hostedzone-identifier
