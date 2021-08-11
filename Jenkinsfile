@@ -442,6 +442,7 @@ pipeline{
                     script {
                         
                         env.ARN = sh(script:"aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-default-external-dns | grep -i OutputValue | cut -d'\"' -f 4", returnStdout:true).trim()
+                        env.ZONE_ID = sh(script:"aws route53 list-hosted-zones-by-name --dns-name $DOMAIN_NAME --query HostedZones[].Id --output text | cut -d/ -f3", returnStdout:true).trim()
                     }
                     echo "Testing if the aws-load-balancer-controller role is ready or not"
                 script {
@@ -450,9 +451,18 @@ pipeline{
                           sh "aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-kube-system-aws-load-balancer-controller --output text | grep -i CREATE_COMPLETE | tail -n 1 | cut -f8"
                           echo "Successfully created  aws-load-balancer-controller role."
                           sh "kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml"
-                          sh "sed -i 's|{{role-arn}}|$ARN|g' externalDNS.yml"
-                          sh "sed -i 's|{{DOMAIN_NAME}}|$DOMAIN_NAME|g' externalDNS.yml"
-                          sh "kubectl apply  -f  externalDNS.yml"
+                          sh """
+                          helm install my-release stable/external-dns \
+                            --set provider=aws \
+                            --set domainFilters[0]=$DOMAIN_NAME\
+                            --set policy=sync \
+                            --set registry=txt \
+                            --set txtOwnerId=$ZONE_ID \
+                            --set interval=3m \
+                            --set rbac.create=true \
+                            --set rbac.serviceAccountName=external-dns \
+                            --set rbac.serviceAccountAnnotations.eks\.amazonaws\.com/role-arn=$ARN
+                          """
                           sleep(15)
                           break
                         }
