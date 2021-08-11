@@ -278,7 +278,7 @@ pipeline{
                     sh "curl --silent https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluentd-quickstart.yaml >> cwagent-fluentd-quickstart.yaml"
                     sh "sed -i 's|{{cluster_name}}|${CLUSTER_NAME}|g' cwagent-fluentd-quickstart.yaml"
                     sh "sed -i 's|{{region_name}}|${AWS_REGION}|g' cwagent-fluentd-quickstart.yaml"
-                    sh "kubectl apply -f cwagent-fluentd-quickstart.yaml"   
+                    sh "kubectl apply --validate=false -f cwagent-fluentd-quickstart.yaml"   
                     sh """
                       aws iam attach-role-policy --role-name ${ROLE_ARN} --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
                     """
