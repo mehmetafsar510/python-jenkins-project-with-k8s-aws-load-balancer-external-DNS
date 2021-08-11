@@ -14,7 +14,7 @@ pipeline{
         CLUSTER_NAME = "mehmet-cluster"
         FQDN = "clarus.mehmetafsar.com"
         DOMAIN_NAME = "mehmetafsar.com"
-        NM_SP = "phone"
+        NM_SP = "mehmet"
         GIT_FOLDER = sh(script:'echo ${GIT_URL} | sed "s/.*\\///;s/.git$//"', returnStdout:true).trim()
     }
     stages{
@@ -553,16 +553,15 @@ pipeline{
                         if [ "$NameSpaces" == '' ]
                         then
                             kubectl create namespace prometheus
+                            kubectl apply --namespace prometheus -f prometheus
+                            kubectl apply -f store.yml
+                            kubectl apply --namespace prometheus -f grafana
+                            kubectl get svc --namespace prometheus
                         else
-                            kubectl delete namespace prometheus
-                            kubectl create namespace prometheus
+                            echo "Prometheus namespace has already created"
 
                             fi
-                    '''
-                    sh "kubectl apply --namespace prometheus -f prometheus"
-                    sh "kubectl apply -f store.yml"
-                    sh "kubectl apply --namespace prometheus -f grafana"
-                    sh "kubectl get svc --namespace prometheus"       
+                    '''       
                 }                  
             }
         }
