@@ -269,8 +269,7 @@ pipeline{
                 withAWS(credentials: 'mycredentials', region: 'us-east-1') {
                     script {
                         
-                        env.roleArn = sh(script:"aws eks describe-nodegroup --nodegroup-name ${CLUSTER_NAME}-0 --cluster-name ${CLUSTER_NAME} --query nodegroup.nodeRole --output text", returnStdout:true).trim()
-                        env.role = sh(script:"echo ${roleArn}", returnStdout:true).split('/')[1]
+                        env.ROLE_ARN = sh(script:"aws eks describe-nodegroup --nodegroup-name ${CLUSTER_NAME}-0 --cluster-name ${CLUSTER_NAME} --query nodegroup.nodeRole --output text | cut -d '/' -f 2", returnStdout:true).trim()
                     }
                     echo "Cluster setup."
                     sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
@@ -281,7 +280,7 @@ pipeline{
                     sh "sed -i 's|{{region_name}}|${AWS_REGION}|g' cwagent-fluentd-quickstart.yaml"
                     sh "kubectl apply -f cwagent-fluentd-quickstart.yaml"   
                     sh """
-                      aws iam attach-role-policy --role-name ${role} --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+                      aws iam attach-role-policy --role-name ${ROLE_ARN} --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
                     """
                 }    
             }
