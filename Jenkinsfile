@@ -240,6 +240,7 @@ pipeline{
                                 --node-type t2.medium \
                                 --with-oidc \
                                 --managed \
+                                --nodegroup-name ${CLUSTER_NAME}-0 \
                                 --nodes 1 --nodes-min 1 --nodes-max 2 \
                                 --node-volume-size 8 --name ${CLUSTER_NAME} \
                                 --zones us-east-1a,us-east-1b,us-east-1c,us-east-1d,us-east-1f
@@ -262,12 +263,29 @@ pipeline{
             }
         }
 
-        stage('Cluster setup'){
+        stage('Cloudwatch metrics and Container Insights setup'){
             agent any
             steps{
                 withAWS(credentials: 'mycredentials', region: 'us-east-1') {
                     echo "Cluster setup."
                     sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}"
+                    
+                    echo "Setting up Cloudwatch metrics and Container Insights."
+                    sh """
+                      curl --silent https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluentd-quickstart.yaml | \\
+                        sed "s/{{cluster_name}}/${CLUSTER_NAME}/;s/{{region_name}}/${AWS_REGION}/" | \\
+                        ./kubectl apply -f -
+                    """
+                    roleArn = sh(returnStdout: true, 
+                      script: """
+                      aws eks describe-nodegroup --nodegroup-name ${CLUSTER_NAME}-0 --cluster-name ${CLUSTER_NAME} --query nodegroup.nodeRole --output text
+                      """).trim()
+
+                    role = roleArn.split('/')[1]
+
+                    sh """
+                      aws iam attach-role-policy --role-name ${role} --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+                    """
                 }    
             }
         }
