@@ -451,6 +451,7 @@ pipeline{
                           sh "aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-kube-system-aws-load-balancer-controller --output text | grep -i CREATE_COMPLETE | tail -n 1 | cut -f8"
                           echo "Successfully created  aws-load-balancer-controller role."
                           sh "kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml"
+                          sh "helm repo update"
                           sh """
                           helm install my-release stable/external-dns \
                             --set provider=aws \
