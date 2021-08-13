@@ -461,7 +461,7 @@ pipeline{
                             --set interval=3m \
                             --set rbac.create=true \
                             --set rbac.serviceAccountName=external-dns \
-                            --set rbac.serviceAccountAnnotations.eks.amazonaws.com/role-arn=$ARN
+                            --set rbac.serviceAccountAnnotations.eks\\.amazonaws\\.com/role-arn=$ARN
                           """
                           sleep(15)
                           break
