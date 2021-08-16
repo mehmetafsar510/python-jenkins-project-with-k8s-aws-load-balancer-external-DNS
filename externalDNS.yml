@@ -53,8 +53,8 @@ spec:
         app: external-dns
       # If you're using kiam or kube2iam, specify the following annotation.
       # Otherwise, you may safely omit it.  #Change-2: Commented line 55 and 56
-      annotations:  
-        iam.amazonaws.com/role: {{role-arn}}    
+      #annotations:  
+        #iam.amazonaws.com/role: {{role-arn}}    
     spec:
       serviceAccountName: external-dns
       containers:
