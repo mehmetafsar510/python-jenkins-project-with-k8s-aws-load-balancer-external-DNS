@@ -14,7 +14,7 @@ pipeline{
         CLUSTER_NAME = "mehmet-cluster"
         FQDN = "clarus.mehmetafsar.com"
         DOMAIN_NAME = "mehmetafsar.com"
-        NM_SP = "phone"
+        NM_SP = "mehmet"
         GIT_FOLDER = sh(script:'echo ${GIT_URL} | sed "s/.*\\///;s/.git$//"', returnStdout:true).trim()
     }
     stages{
@@ -453,7 +453,7 @@ pipeline{
                           sh "kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml"
                           sh "sed -i 's|{{role-arn}}|$ARN|g' externalDNS.yml"
                           sh "sed -i 's|{{DOMAIN_NAME}}|$DOMAIN_NAME|g' externalDNS.yml"
-                          sh "kubectl apply  -f  externalDNS.yml"
+                          sh "kubectl apply -f externalDNS.yml"
                           sleep(15)
                           break
                         }
