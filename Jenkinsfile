@@ -536,13 +536,32 @@ pipeline{
                     sh "aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID --change-batch file://certificate.json"
                     
                     sleep(5)
-                    sh "sudo mv -f ingress-https.yaml ingress.yaml" 
-                    sh "sed -i 's|{{FQDN}}|$FQDN|g' ingress.yaml"
-                    sh "sed -i 's|{{ARN}}|$SSL_CERT_ARN|g' ingress.yaml"
-                    sh "kubectl apply --namespace $NM_SP -f ingress.yaml"              
+                                  
                 }                  
             }
         }
+        stage('k8s-ingress') {
+            steps {
+                withAWS(credentials: 'mycredentials', region: 'us-east-1') {
+                script {
+                    while(true) {
+                        try {
+                          sh "sudo mv -f ingress-https.yaml ingress.yaml" 
+                          sh "sed -i 's|{{FQDN}}|$FQDN|g' ingress.yaml"
+                          sh "sed -i 's|{{ARN}}|$SSL_CERT_ARN|g' ingress.yaml"
+                          sh "kubectl apply --namespace $NM_SP -f ingress.yaml"
+                          sleep(15)
+                          break
+                        }
+                        catch(Exception) {
+                          echo 'Could not get aws-load-balancer-controller role please wait'
+                          sleep(5)  
+                        } 
+                    }
+                }
+            }
+        }
+    }
         stage('Prometheus-Grafana'){
             agent any
             steps{
