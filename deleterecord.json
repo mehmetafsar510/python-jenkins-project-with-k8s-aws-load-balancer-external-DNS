@@ -8,7 +8,7 @@
                            "AliasTarget":{
                                    "HostedZoneId": "Z35SXDOTRQ7X7K",
                                    "DNSName": "{{DNS}}",
-                                   "EvaluateTargetHealth": false
+                                   "EvaluateTargetHealth": true
                              }}
                          }]
 }
