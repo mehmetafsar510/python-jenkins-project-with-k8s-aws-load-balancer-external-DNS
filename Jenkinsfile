@@ -454,7 +454,6 @@ pipeline{
                           sh "sed -i 's|{{role-arn}}|$ARN|g' externalDNS.yml"
                           sh "sed -i 's|{{DOMAIN_NAME}}|$DOMAIN_NAME|g' externalDNS.yml"
                           sh "kubectl apply  -f  externalDNS.yml"
-                          sh "kubectl logs -f \$(kubectl get po | egrep -o 'external-dns[A-Za-z0-9-]+')"
                           sleep(15)
                           break
                         }
