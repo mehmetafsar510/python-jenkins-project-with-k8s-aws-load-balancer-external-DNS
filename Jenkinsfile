@@ -450,10 +450,11 @@ pipeline{
                           sh "aws cloudformation describe-stacks --stack-name eksctl-mehmet-cluster-addon-iamserviceaccount-kube-system-aws-load-balancer-controller --output text | grep -i CREATE_COMPLETE | tail -n 1 | cut -f8"
                           echo "Successfully created  aws-load-balancer-controller role."
                           sh "kubectl get sa external-dns"
-                          sh "kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml"
                           sh "sed -i 's|{{role-arn}}|$ARN|g' externalDNS.yml"
                           sh "sed -i 's|{{DOMAIN_NAME}}|$DOMAIN_NAME|g' externalDNS.yml"
                           sh "kubectl apply -f externalDNS.yml"
+                          sh "sed -i 's|{{FQDN}}|$FQDN|g' ingress.yaml"
+                          sh "kubectl apply --validate=false --namespace $NM_SP -f ingress.yaml"
                           sleep(15)
                           break
                         }
