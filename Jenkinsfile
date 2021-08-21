@@ -472,7 +472,7 @@ pipeline{
                     script {
                         
                         env.ZONE_ID = sh(script:"aws route53 list-hosted-zones-by-name --dns-name $DOMAIN_NAME --query HostedZones[].Id --output text | cut -d/ -f3", returnStdout:true).trim()
-                        env.TXT_DNS = sh(script:"aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID --query \"ResourceRecordSets[?Type == 'TXT']\" --output text | tail -n 1 | cut -d\" -f2", returnStdout:true).trim()  
+                        env.TXT_DNS = sh(script:"aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID --query \"ResourceRecordSets[?Type == 'TXT']\" --output text | tail -n 1 | cut -d'\"' -f2", returnStdout:true).trim()  
                     }
                     sh "sed -i 's|{{DNS}}|$TXT_DNS|g' deletetxt.json"
                     sh "sed -i 's|{{FQDN}}|$FQDN|g' deletetxt.json"
@@ -489,7 +489,7 @@ pipeline{
                 }                  
             }
         }
-        
+
         stage('dns-record-control'){
             agent any
             steps{
