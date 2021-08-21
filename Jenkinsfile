@@ -465,29 +465,18 @@ pipeline{
             }
         }
     }
-
-        stage('dns-record-control'){
+        stage('txt-record-control'){
             agent any
             steps{
                 withAWS(credentials: 'mycredentials', region: 'us-east-1') {
                     script {
                         
                         env.ZONE_ID = sh(script:"aws route53 list-hosted-zones-by-name --dns-name $DOMAIN_NAME --query HostedZones[].Id --output text | cut -d/ -f3", returnStdout:true).trim()
-                        env.ELB_DNS = sh(script:"aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID --query \"ResourceRecordSets[?Name == '\$FQDN.']\" --output text | tail -n 1 | cut -f2", returnStdout:true).trim()
                         env.TXT_DNS = sh(script:"aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID --query \"ResourceRecordSets[?Type == 'TXT']\" --output text | tail -n 1 | cut -d\" -f2", returnStdout:true).trim()  
                     }
-                    sh "sed -i 's|{{DNS}}|$ELB_DNS|g' deleterecord.json"
-                    sh "sed -i 's|{{FQDN}}|$FQDN|g' deleterecord.json"
                     sh "sed -i 's|{{DNS}}|$TXT_DNS|g' deletetxt.json"
                     sh "sed -i 's|{{FQDN}}|$FQDN|g' deletetxt.json"
-                    sh '''
-                        RecordSet=$(aws route53 list-resource-record-sets   --hosted-zone-id $ZONE_ID   --query ResourceRecordSets[] | grep -i $FQDN) || true
-                        if [ "$RecordSet" != '' ]
-                        then
-                            aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID --change-batch file://deleterecord.json
-                        
-                        fi
-                    '''
+                    
                     sh '''
                         DeleteSet=$(aws route53 list-resource-record-sets   --hosted-zone-id $ZONE_ID   --query ResourceRecordSets[] | grep -i $FQDN) || true
                         if [ "$DeleteSet" != '' ]
@@ -497,6 +486,30 @@ pipeline{
                         fi
                     '''
                     
+                }                  
+            }
+        }
+        
+        stage('dns-record-control'){
+            agent any
+            steps{
+                withAWS(credentials: 'mycredentials', region: 'us-east-1') {
+                    script {
+                        
+                        env.ZONE_ID = sh(script:"aws route53 list-hosted-zones-by-name --dns-name $DOMAIN_NAME --query HostedZones[].Id --output text | cut -d/ -f3", returnStdout:true).trim()
+                        env.ELB_DNS = sh(script:"aws route53 list-resource-record-sets --hosted-zone-id $ZONE_ID --query \"ResourceRecordSets[?Name == '\$FQDN.']\" --output text | tail -n 1 | cut -f2", returnStdout:true).trim()
+                    }
+                    sh "sed -i 's|{{DNS}}|$ELB_DNS|g' deleterecord.json"
+                    sh "sed -i 's|{{FQDN}}|$FQDN|g' deleterecord.json"
+                    
+                    sh '''
+                        RecordSet=$(aws route53 list-resource-record-sets   --hosted-zone-id $ZONE_ID   --query ResourceRecordSets[] | grep -i $FQDN) || true
+                        if [ "$RecordSet" != '' ]
+                        then
+                            aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID --change-batch file://deleterecord.json
+                        
+                        fi
+                    '''
                 }                  
             }
         }
