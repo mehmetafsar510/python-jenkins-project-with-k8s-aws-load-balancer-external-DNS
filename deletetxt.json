@@ -9,7 +9,7 @@
           "TTL": 300,
           "ResourceRecords": [
             {
-              "Value": "{{DNS}}"
+              "Value": "\"{{DNS}}\""
             }
           ]
         }

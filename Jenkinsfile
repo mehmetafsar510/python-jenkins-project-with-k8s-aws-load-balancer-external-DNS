@@ -478,7 +478,7 @@ pipeline{
                     }
                     sh "sed -i 's|{{DNS}}|$ELB_DNS|g' deleterecord.json"
                     sh "sed -i 's|{{FQDN}}|$FQDN|g' deleterecord.json"
-                    sh "sed -i 's|{{DNS}}|\\"$TXT_DNS\\"|g' deletetxt.json"
+                    sh "sed -i 's|{{DNS}}|$TXT_DNS|g' deletetxt.json"
                     sh "sed -i 's|{{FQDN}}|$FQDN|g' deletetxt.json"
                     sh '''
                         RecordSet=$(aws route53 list-resource-record-sets   --hosted-zone-id $ZONE_ID   --query ResourceRecordSets[] | grep -i $FQDN) || true
