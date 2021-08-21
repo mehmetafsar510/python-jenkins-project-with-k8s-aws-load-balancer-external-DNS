@@ -1,0 +1,18 @@
+{
+    "Comment": "Delete Txt record",
+    "Changes": [
+      {
+        "Action": "DELETE",
+        "ResourceRecordSet": {
+          "Name": "{{FQDN}}",
+          "Type": "TXT",
+          "TTL": 300,
+          "ResourceRecords": [
+            {
+              "Value": "{{DNS}}"
+            }
+          ]
+        }
+      }
+    ]
+  }
