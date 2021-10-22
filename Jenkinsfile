@@ -13,7 +13,7 @@ pipeline{
         AWS_REGION = "us-east-1"
         CFN_KEYPAIR="doctor-external"
         CLUSTER_NAME = "mehmet-cluster"
-        FQDN = "kubernetes.mehmetafsar.net"
+        FQDN = "clarusshop.mehmetafsar.net"
         DOMAIN_NAME = "mehmetafsar.net"
         NM_SP = "mehmet"
         GIT_FOLDER = sh(script:'echo ${GIT_URL} | sed "s/.*\\///;s/.git$//"', returnStdout:true).trim()
